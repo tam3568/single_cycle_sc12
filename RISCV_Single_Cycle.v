@@ -74,11 +74,15 @@ module RISCV_Single_Cycle(
     );
 
     // ALU input selection
-    assign ALU_in2 = (ALUSrc[0]) ? Imm : ReadData2;
+    logic [31:0] ALU_in1;
+    assign ALU_in1 = ReadData1;
+    assign ALU_in2 = (ALUSrc == 2'b00) ? ReadData2 :
+                     (ALUSrc == 2'b01) ? Imm :
+                     (ALUSrc == 2'b10) ? Imm : 32'b0; // U-type cũng dùng Imm
 
     // ALU
     ALU alu(
-        .A(ReadData1),
+        .A(ALU_in1),
         .B(ALU_in2),
         .ALUOp(ALUCtrl),
         .Result(ALU_result),
@@ -96,8 +100,12 @@ module RISCV_Single_Cycle(
         .ReadData(MemReadData)
     );
 
-    // Write-back mux
-    assign WriteData = (MemToReg) ? MemReadData : ALU_result;
+    // Write-back mux (chuẩn CS61C: chọn giữa ALU_result, MemReadData, Imm, PC+Imm)
+    logic [31:0] PC_plus_Imm;
+    assign PC_plus_Imm = PC_out_top + Imm;
+    assign WriteData = (ALUCtrl == 4'b1010) ? Imm : // LUI
+                       (ALUCtrl == 4'b1011) ? PC_plus_Imm : // AUIPC
+                       (MemToReg) ? MemReadData : ALU_result;
 
     // Control unit
     control_unit ctrl(

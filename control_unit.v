@@ -75,6 +75,18 @@ module control_unit (
                 MemToReg = 0;
                 ALUOp = 4'b0000;
             end
+            7'b0110111: begin // LUI
+                ALUSrc = 2'b10; // chọn immediate U-type
+                RegWrite = 1;
+                MemToReg = 0;
+                ALUOp = 4'b1010; // custom code cho LUI
+            end
+            7'b0010111: begin // AUIPC
+                ALUSrc = 2'b10; // chọn immediate U-type
+                RegWrite = 1;
+                MemToReg = 0;
+                ALUOp = 4'b1011; // custom code cho AUIPC
+            end
             default: ;
         endcase
     end
