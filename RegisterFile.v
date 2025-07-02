@@ -11,8 +11,8 @@ module RegisterFile (
 );
     reg [31:0] registers [0:31];
 
-    assign ReadData1 = (rs1 != 0) ? ((RegWrite && rd == rs1 && rd != 0) ? WriteData : registers[rs1]) : 32'b0;
-    assign ReadData2 = (rs2 != 0) ? ((RegWrite && rd == rs2 && rd != 0) ? WriteData : registers[rs2]) : 32'b0;
+    assign ReadData1 = (rs1 != 0) ? registers[rs1] : 32'b0;
+    assign ReadData2 = (rs2 != 0) ? registers[rs2] : 32'b0;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin

@@ -19,4 +19,10 @@ module DMEM (
             memory[addr[9:2]] <= WriteData;
         end
     end
+    initial begin
+        if ($fopen("./mem/dmem_init2.hex", "r"))
+            $readmemh("./mem/dmem_init2.hex", memory);
+        else if ($fopen("./mem/dmem_init.hex", "r"))
+            $readmemh("./mem/dmem_init.hex", memory);
+    end
 endmodule
