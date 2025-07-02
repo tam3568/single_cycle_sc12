@@ -32,17 +32,10 @@ module RISCV_Single_Cycle(
     logic Branch, MemRead, MemWrite, MemToReg;
     logic RegWrite, PCSel;
 
-    // Instruction register to hold the current instruction
-    logic [31:0] Instruction_reg;
-    logic [31:0] Instruction_from_imem;
-    logic pc_out_of_range;
-
     // PC update
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             PC_out_top <= 32'b0;
-        else if (Instruction_reg === 32'hxxxxxxxx)
-            PC_out_top <= PC_out_top; // Giữ nguyên PC khi đã out of range
         else
             PC_out_top <= PC_next;
     end
@@ -50,26 +43,8 @@ module RISCV_Single_Cycle(
     // Instruction Memory (IMEM)
     IMEM IMEM_inst(
         .addr(PC_out_top),
-        .Instruction(Instruction_from_imem)
+        .Instruction(Instruction_out_top)
     );
-
-    // Detect out of range PC (Instruction_from_imem == xxxxxxxx)
-    assign pc_out_of_range = (Instruction_from_imem === 32'hxxxxxxxx);
-
-    // Instruction register update
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            Instruction_reg <= 32'b0;
-        end else if (Instruction_reg === 32'hxxxxxxxx) begin
-            Instruction_reg <= 32'hxxxxxxxx; // Giữ nguyên xxxxxxxx
-        end else if (Instruction_from_imem === 32'hxxxxxxxx) begin
-            Instruction_reg <= 32'hxxxxxxxx;
-        end else begin
-            Instruction_reg <= Instruction_from_imem;
-        end
-    end
-
-    assign Instruction_out_top = Instruction_reg;
 
     // Instruction field decoding
     assign opcode = Instruction_out_top[6:0];
@@ -125,11 +100,10 @@ module RISCV_Single_Cycle(
         .ReadData(MemReadData)
     );
 
-    // Write-back mux (chuẩn CS61C: chọn giữa ALU_result, MemReadData, Imm, PC+Imm, PC+4 cho JAL/JALR)
+    // Write-back mux (chuẩn CS61C: chọn giữa ALU_result, MemReadData, Imm, PC+Imm)
     logic [31:0] PC_plus_Imm;
     assign PC_plus_Imm = PC_out_top + Imm;
-    assign WriteData = (opcode == 7'b1101111 || opcode == 7'b1100111) ? PC_out_top + 4 : // JAL, JALR
-                       (ALUCtrl == 4'b1010) ? Imm : // LUI
+    assign WriteData = (ALUCtrl == 4'b1010) ? Imm : // LUI
                        (ALUCtrl == 4'b1011) ? PC_plus_Imm : // AUIPC
                        (MemToReg) ? MemReadData : ALU_result;
 
