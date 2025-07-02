@@ -78,7 +78,7 @@ module RISCV_Single_Cycle(
     assign ALU_in1 = ReadData1;
     assign ALU_in2 = (ALUSrc == 2'b00) ? ReadData2 :
                      (ALUSrc == 2'b01) ? Imm :
-                     (ALUSrc == 2'b10) ? Imm : 32'b0; // U-type cũng dùng Imm
+                     (ALUSrc == 2'b10) ? Imm : 32'b0;
 
     // ALU
     ALU alu(
