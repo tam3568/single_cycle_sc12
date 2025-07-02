@@ -7,17 +7,20 @@ module IMEM (
     assign Instruction = (addr[11:2] < IMEM_DEPTH) ? memory[addr[11:2]] : 32'h00000063;
 
     initial begin
-        integer i;
+        integer f, i;
 
-        `ifdef SC2
+        // Ưu tiên imem2.hex nếu có
+        f = $fopen("./mem/imem2.hex", "r");
+        if (f) begin
+            $fclose(f);
             $display("IMEM: loading imem2.hex");
             $readmemh("./mem/imem2.hex", memory);
-        `else
+        end else begin
             $display("IMEM: loading imem.hex");
             $readmemh("./mem/imem.hex", memory);
-        `endif
+        end
 
-        // In nội dung 5 dòng đầu tiên
+        // In 5 dòng đầu
         for (i = 0; i < 5; i = i + 1) begin
             $display("IMEM%0d: %08x", i, memory[i]);
         end
