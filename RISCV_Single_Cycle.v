@@ -32,6 +32,11 @@ module RISCV_Single_Cycle(
     logic Branch, MemRead, MemWrite, MemToReg;
     logic RegWrite, PCSel;
 
+    // Instruction register to hold the current instruction
+    logic [31:0] Instruction_reg;
+    logic [31:0] Instruction_from_imem;
+    logic pc_out_of_range;
+
     // PC update
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n)
@@ -43,8 +48,24 @@ module RISCV_Single_Cycle(
     // Instruction Memory (IMEM)
     IMEM IMEM_inst(
         .addr(PC_out_top),
-        .Instruction(Instruction_out_top)
+        .Instruction(Instruction_from_imem)
     );
+
+    // Detect out of range PC (Instruction_from_imem == xxxxxxxx)
+    assign pc_out_of_range = (Instruction_from_imem === 32'hxxxxxxxx);
+
+    // Instruction register update
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            Instruction_reg <= 32'b0;
+        end else if (pc_out_of_range) begin
+            Instruction_reg <= 32'hxxxxxxxx;
+        end else begin
+            Instruction_reg <= Instruction_from_imem;
+        end
+    end
+
+    assign Instruction_out_top = Instruction_reg;
 
     // Instruction field decoding
     assign opcode = Instruction_out_top[6:0];
