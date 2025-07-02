@@ -7,12 +7,12 @@ module IMEM (
     assign Instruction = (addr[11:2] < IMEM_DEPTH) ? memory[addr[11:2]] : 32'h00000063;
 
     initial begin
-        if ($fopen("./mem/imem2.hex", "r"))
-            $readmemh("./mem/imem2.hex", memory);
-        else if ($fopen("./mem/imem.hex", "r"))
-            $readmemh("./mem/imem.hex", memory);
-        $display("IMEM0: %h", memory[0]);
-        $display("IMEM1: %h", memory[1]);
-        $display("IMEM2: %h", memory[2]);
+    `ifdef SC2
+        $display("IMEM: loading imem2.hex");
+        $readmemh("./mem/imem2.hex", memory);
+    `else
+        $display("IMEM: loading imem.hex");
+        $readmemh("./mem/imem.hex", memory);
+    `endif
     end
 endmodule
