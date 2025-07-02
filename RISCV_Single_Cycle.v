@@ -65,16 +65,16 @@ module RISCV_Single_Cycle(
     );
 
     // Instruction field decoding
-    assign opcode = Instruction_from_imem[6:0];
-    assign rd     = Instruction_from_imem[11:7];
-    assign funct3 = Instruction_from_imem[14:12];
-    assign rs1    = Instruction_from_imem[19:15];
-    assign rs2    = Instruction_from_imem[24:20];
-    assign funct7 = Instruction_from_imem[31:25];
+    assign opcode = Instruction_out_top[6:0];
+    assign rd     = Instruction_out_top[11:7];
+    assign funct3 = Instruction_out_top[14:12];
+    assign rs1    = Instruction_out_top[19:15];
+    assign rs2    = Instruction_out_top[24:20];
+    assign funct7 = Instruction_out_top[31:25];
 
     // Immediate generator
     Imm_Gen imm_gen(
-        .inst(Instruction_from_imem),
+        .inst(Instruction_out_top),
         .imm_out(Imm)
     );
 
