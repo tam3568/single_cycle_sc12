@@ -32,28 +32,10 @@ module RISCV_Single_Cycle(
     logic Branch, MemRead, MemWrite, MemToReg;
     logic RegWrite, PCSel;
 
-    // Instruction register update
-    logic [31:0] Instruction_reg;
-    logic [31:0] Instruction_from_imem;
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            Instruction_reg <= 32'b0;
-        end else if (Instruction_reg === 32'hxxxxxxxx) begin
-            Instruction_reg <= 32'hxxxxxxxx;
-        end else if (Instruction_from_imem === 32'hxxxxxxxx) begin
-            Instruction_reg <= Instruction_reg; // Giữ lệnh cuối cùng thêm 1 chu kỳ
-        end else begin
-            Instruction_reg <= Instruction_from_imem;
-        end
-    end
-    assign Instruction_out_top = Instruction_reg;
-
     // PC update
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             PC_out_top <= 32'b0;
-        else if (Instruction_reg === 32'hxxxxxxxx)
-            PC_out_top <= PC_out_top; // Giữ nguyên PC khi đã out of range
         else
             PC_out_top <= PC_next;
     end
@@ -61,7 +43,7 @@ module RISCV_Single_Cycle(
     // Instruction Memory (IMEM)
     IMEM IMEM_inst(
         .addr(PC_out_top),
-        .Instruction(Instruction_from_imem)
+        .Instruction(Instruction_out_top)
     );
 
     // Instruction field decoding
