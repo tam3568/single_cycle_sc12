@@ -11,14 +11,15 @@ module RISCV_Single_Cycle (
     logic [2:0] funct3;
     logic [6:0] opcode;
     logic [31:0] ImmExt;
-    logic [31:0] RD1, RD2;
+    logic [31:0] ReadData1, ReadData2;
     logic [31:0] ALU_result;
     logic [31:0] WriteData;
     logic [31:0] ReadData;
-    logic Branch, MemRead, MemtoReg, MemWrite, ALUSrc, RegWrite, Jump;
-    logic [1:0] ALUOp;
+    logic Branch, MemRead, MemToReg, MemWrite, RegWrite;
+    logic [1:0] ALUSrc;
+    logic [3:0] ALUOp;
     logic [3:0] ALUControl;
-    logic Zero, TakeBranch;
+    logic Zero, BrTaken;
 
     // --- Fetch PC ---
     PC pc_inst (
@@ -44,14 +45,15 @@ module RISCV_Single_Cycle (
     // --- Control Unit ---
     control_unit CU (
         .opcode(opcode),
+        .funct3(funct3),
+        .funct7(funct7),
+        .ALUSrc(ALUSrc),
+        .ALUOp(ALUOp),
         .Branch(Branch),
         .MemRead(MemRead),
-        .MemtoReg(MemtoReg),
-        .ALUOp(ALUOp),
         .MemWrite(MemWrite),
-        .ALUSrc(ALUSrc),
-        .RegWrite(RegWrite),
-        .Jump(Jump)
+        .MemToReg(MemToReg),
+        .RegWrite(RegWrite)
     );
 
     // --- Register File ---
@@ -63,42 +65,45 @@ module RISCV_Single_Cycle (
         .rd(rd),
         .RegWrite(RegWrite),
         .WriteData(WriteData),
-        .RD1(RD1),
-        .RD2(RD2)
+        .ReadData1(ReadData1),
+        .ReadData2(ReadData2)
     );
 
     // --- Immediate Generator ---
     Imm_Gen IG (
-        .instruction(Instruction),
-        .ImmExt(ImmExt)
+        .inst(Instruction),
+        .imm_out(ImmExt)
     );
 
     // --- ALU Decoder ---
     ALU_decoder ALUDec (
-        .ALUOp(ALUOp),
+        .alu_op(ALUOp[1:0]),
         .funct3(funct3),
-        .funct7(funct7),
-        .ALUControl(ALUControl)
+        .funct7b5(funct7[5]),
+        .alu_control(ALUControl)
     );
 
     // --- ALU ---
     logic [31:0] SrcB;
-    assign SrcB = ALUSrc ? ImmExt : RD2;
+    assign SrcB = (ALUSrc == 2'b00) ? ReadData2 :
+                  (ALUSrc == 2'b01) ? ImmExt :
+                  (ALUSrc == 2'b10) ? ImmExt : 32'b0;
 
     ALU alu (
-        .A(RD1),
+        .A(ReadData1),
         .B(SrcB),
-        .ALUControl(ALUControl),
+        .ALUOp(ALUControl),
         .Result(ALU_result),
         .Zero(Zero)
     );
 
     // --- Branch Comparator ---
     Branch_Comp BC (
-        .A(RD1),
-        .B(RD2),
+        .A(ReadData1),
+        .B(ReadData2),
+        .Branch(Branch),
         .funct3(funct3),
-        .TakeBranch(TakeBranch)
+        .BrTaken(BrTaken)
     );
 
     // --- Data Memory ---
@@ -108,19 +113,17 @@ module RISCV_Single_Cycle (
         .MemRead(MemRead),
         .MemWrite(MemWrite),
         .addr(ALU_result),
-        .WriteData(RD2),
+        .WriteData(ReadData2),
         .ReadData(ReadData)
     );
 
     // --- Write-back MUX ---
-    assign WriteData = MemtoReg ? ReadData : ALU_result;
+    assign WriteData = MemToReg ? ReadData : ALU_result;
 
     // --- PC Update Logic ---
     logic [31:0] PCPlus4 = PC + 4;
     logic [31:0] BranchAddr = PC + ImmExt;
 
-    assign NextPC = Jump              ? ALU_result :
-                    (Branch && TakeBranch) ? BranchAddr :
-                    PCPlus4;
+    assign NextPC = BrTaken ? BranchAddr : PCPlus4;
 
 endmodule
