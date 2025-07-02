@@ -125,10 +125,11 @@ module RISCV_Single_Cycle(
         .ReadData(MemReadData)
     );
 
-    // Write-back mux (chuẩn CS61C: chọn giữa ALU_result, MemReadData, Imm, PC+Imm)
+    // Write-back mux (chuẩn CS61C: chọn giữa ALU_result, MemReadData, Imm, PC+Imm, PC+4 cho JAL/JALR)
     logic [31:0] PC_plus_Imm;
     assign PC_plus_Imm = PC_out_top + Imm;
-    assign WriteData = (ALUCtrl == 4'b1010) ? Imm : // LUI
+    assign WriteData = (opcode == 7'b1101111 || opcode == 7'b1100111) ? PC_out_top + 4 : // JAL, JALR
+                       (ALUCtrl == 4'b1010) ? Imm : // LUI
                        (ALUCtrl == 4'b1011) ? PC_plus_Imm : // AUIPC
                        (MemToReg) ? MemReadData : ALU_result;
 
