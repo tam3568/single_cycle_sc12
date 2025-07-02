@@ -41,6 +41,8 @@ module RISCV_Single_Cycle(
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             PC_out_top <= 32'b0;
+        else if (Instruction_reg === 32'hxxxxxxxx)
+            PC_out_top <= PC_out_top; // Giữ nguyên PC khi đã out of range
         else
             PC_out_top <= PC_next;
     end
@@ -58,7 +60,9 @@ module RISCV_Single_Cycle(
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             Instruction_reg <= 32'b0;
-        end else if (pc_out_of_range) begin
+        end else if (Instruction_reg === 32'hxxxxxxxx) begin
+            Instruction_reg <= 32'hxxxxxxxx; // Giữ nguyên xxxxxxxx
+        end else if (Instruction_from_imem === 32'hxxxxxxxx) begin
             Instruction_reg <= 32'hxxxxxxxx;
         end else begin
             Instruction_reg <= Instruction_from_imem;
