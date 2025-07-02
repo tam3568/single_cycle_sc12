@@ -7,7 +7,7 @@ module DMEM (
     input logic [31:0] WriteData,
     output logic [31:0] ReadData
 );
-    logic [31:0] memory [0:255];
+    reg [31:0] memory [0:255];
 
     assign ReadData = (MemRead) ? memory[addr[9:2]] : 32'b0;
 

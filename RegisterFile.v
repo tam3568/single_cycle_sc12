@@ -9,7 +9,7 @@ module RegisterFile (
     output logic [31:0] ReadData2,
     input logic rst_n              // <--- Thêm cổng reset!
 );
-    logic [31:0] registers [0:31];
+    reg [31:0] registers [0:31];
 
     assign ReadData1 = (rs1 != 0) ? registers[rs1] : 32'b0;
     assign ReadData2 = (rs2 != 0) ? registers[rs2] : 32'b0;

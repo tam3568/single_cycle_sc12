@@ -3,7 +3,7 @@ module IMEM (
     output [31:0] Instruction
 );
     reg [31:0] memory [0:255];
-    assign Instruction = (addr[9:2] < 100) ? memory[addr[9:2]] : 32'h00000013; // NOP nếu out of range
+    assign Instruction = (addr[9:2] < 100) ? memory[addr[9:2]] : 32'hxxxxxxxx;
 
     initial begin
         $readmemh("./mem/imem2.hex", memory);
